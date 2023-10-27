@@ -1,10 +1,16 @@
 # DDA-MLIC
-Implementation of the paper: "Discriminator-free Unsupervised Domain Adaptation for Multi-label Image Classification"
+This repo is the official PyTorch implementation of "Discriminator-free Unsupervised Domain Adaptation for Multi-label Image Classification".
 
 ![alt text](arch_v4.png "Title")
 
 ## Datasets
-Download the datasets from here:
+1. [AID](https://github.com/Hua-YS/AID-Multilabel-Dataset)
+2. [UCM](http://weegee.vision.ucmerced.edu/datasets/landuse.html) ([Labels](https://bigearth.eu/datasets.html))
+3. [DFC](https://github.com/Hua-YS/DFC15-Multilabel-Dataset)
+4. [PASCAL VOC 2007](http://host.robots.ox.ac.uk/pascal/VOC/voc2007/)
+5. [Clipart1k](https://github.com/naoto0804/cross-domain-detection)
+6. [Cityscapes](https://www.cityscapes-dataset.com/)
+7. [Foggycityscapes](https://www.cityscapes-dataset.com/)
 
 ## Pre-trained models
 We provide a collection of models trained with the proposed GMM-based discrepancy on various multi-label domain adaptation datasets.
