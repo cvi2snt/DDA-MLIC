@@ -14,7 +14,7 @@ from src.helper_functions.helper_functions import mAP, add_weight_decay, Forever
 from src.helper_functions.logger import CompleteLogger
 from src.helper_functions.meter import AverageMeter, ProgressMeter
 from src.models import create_model
-from src.loss_functions.losses import AsymmetricLoss
+from src.loss_functions.losses import AsymmetricLoss, GMM_Discrepancy
 
 parser = argparse.ArgumentParser(description='PyTorch TResNet Discriminator-free Domain Adaptation Training')
 parser.add_argument('--lr', default=1e-3, type=float)
@@ -30,7 +30,7 @@ parser.add_argument('--num-classes', default=17)
 parser.add_argument('-j', '--workers', default=16, type=int, metavar='N',
                     help='number of data loading workers (default: 16)')
 parser.add_argument('--image-size', default=224, type=int,
-                    metavar='N', help='input image size (default: 448)')
+                    metavar='N', help='input image size (default: 224)')
 parser.add_argument('--thre', default=0.8, type=float,
                     metavar='N', help='threshold value')
 parser.add_argument('-b', '--batch-size', default=64, type=int,
@@ -49,7 +49,7 @@ parser.add_argument('--trade-off', default=1.0, type=float,
 def main():
     args = parser.parse_args()
     args.do_bottleneck_head = False
-    logger = CompleteLogger(os.path.join(args.logs_dir, args.model_name, args.source+'2'+args.target), args.phase)
+    logger = CompleteLogger(os.path.join(args.logs_dir, args.source+'2'+args.target), args.phase)
     print(args)    
     
     # Data loading
@@ -89,9 +89,7 @@ def main():
     
     ##### Testing
     if args.phase == 'test':
-        model = load_model_weights_finetune(model, args.model_path)
-        # model = load_model_weights_finetune(model, logger.get_checkpoint_path('best_dd'))
-        
+        model = load_model_weights_finetune(model, args.model_path)        
         print("Target {} Validation in progress".format(args.target))
         validate_full(t_val_loader, model, args)
         return
@@ -104,12 +102,10 @@ def main():
     train(model, s_train_loader, t_train_loader, args, s_val_loader, t_val_loader, logger)
     
     print('\n------Final Validation------------')
-    model = load_model_weights_finetune(model, logger.get_checkpoint_path('best_dd'))
-    model.eval()
-        
+    model = load_model_weights_finetune(model, logger.get_checkpoint_path('best'))
+    model.eval()        
     print("Target Validation in progress")
-    validate_full(t_val_loader, model, args)
-    
+    validate_full(t_val_loader, model, args)    
     logger.close()
            
 def train(model, dataloader_source, dataloader_target, args, s_val_loader, t_val_loader, logger):
@@ -117,9 +113,8 @@ def train(model, dataloader_source, dataloader_target, args, s_val_loader, t_val
     # set optimizer
     Epochs = 25
     weight_decay = 1e-4
-    args.iters_per_epoch = max(len(dataloader_source), len(dataloader_target))
-    # true wd, filter_bias_and_bn
-    parameters = add_weight_decay(model, weight_decay) # model parameters    
+    args.iters_per_epoch = max(len(dataloader_source), len(dataloader_target))    
+    parameters = add_weight_decay(model, weight_decay) # true wd, filter_bias_and_bn
     optimizer = Adam(params=parameters, lr=args.lr, weight_decay=0) 
     scheduler = lr_scheduler.OneCycleLR(optimizer, max_lr=args.lr, steps_per_epoch=args.iters_per_epoch, epochs=Epochs,
                                         pct_start=0.2)
@@ -163,6 +158,7 @@ def train(model, dataloader_source, dataloader_target, args, s_val_loader, t_val
             x_t, labels_t = x_t[:B,:], labels_t[:B,:]
 
             x_s, x_t, labels_s, labels_t = x_s.cuda(), x_t.cuda(), labels_s.cuda(), labels_t.cuda()
+            
             # measure data loading time
             data_time.update(time.time() - end)
             x = torch.cat((x_s, x_t), dim=0)
@@ -182,9 +178,6 @@ def train(model, dataloader_source, dataloader_target, args, s_val_loader, t_val
                 
             transfer_loss = discrepancy_loss * args.trade_off # multiply the lambda to trade off the loss term
             loss = task_loss + transfer_loss
-            
-            if torch.isnan(loss).any():
-                import pdb; pdb.set_trace()
 
             cls_acc = mAP(labels_s.detach().cpu().numpy(),
                             y_s.detach().cpu().numpy())
@@ -211,22 +204,19 @@ def train(model, dataloader_source, dataloader_target, args, s_val_loader, t_val
         discrepancy.eval()
         
         print('\n Target Validation')
-        mAP_score_t = validate(t_val_loader, model, args)
+        mAP_score_t = validate(t_val_loader, model, args)       
         
-        
+        # saving models 
+        torch.save(model.state_dict(), logger.get_checkpoint_path('latest'))
         if mAP_score_t > highest_mAP_t:
             highest_mAP_t = mAP_score_t
-            try:
-                torch.save(model.state_dict(), logger.get_checkpoint_path('best_dd'))
-            except Exception as e:
-                print(e, e.__class__)
-                pass
+            torch.save(model.state_dict(), logger.get_checkpoint_path('best'))
             
         print('\n Source Validation')
-        mAP_score_s = validate(s_val_loader, model, args)
-       
+        mAP_score_s = validate(s_val_loader, model, args)       
         if mAP_score_s > highest_mAP_s:
-            highest_mAP_s = mAP_score_s           
+            highest_mAP_s = mAP_score_s    
+                   
         print('\n------------------------')
         print('Epoch {}/{}'.format(epoch, Epochs))
         print(args.source, ' current_mAP (s) = {:.2f}, highest_mAP (s) = {:.2f}'.format(

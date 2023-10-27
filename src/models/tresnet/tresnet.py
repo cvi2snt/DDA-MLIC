@@ -5,7 +5,6 @@ from collections import OrderedDict
 from .layers.anti_aliasing import AntiAliasDownsampleLayer
 from .layers.avg_pool import FastAvgPool2d
 from .layers.general_layers import SEModule, SpaceToDepthModule
-
 from inplace_abn import InPlaceABN, ABN
 
 def InplacABN_to_ABN(module: nn.Module) -> nn.Module:
@@ -224,6 +223,7 @@ class TResNet(Module):
         self.embeddings = self.global_pool(x)
         logits = self.head(self.embeddings)
         return logits, self.embeddings
+
  
 def TResnetM(model_params):
     """Constructs a medium TResNet M model.
