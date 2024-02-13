@@ -1,7 +1,17 @@
 # DDA-MLIC
-This repo is the official PyTorch implementation of "Discriminator-free Unsupervised Domain Adaptation for Multi-label Image Classification".
+This repo is the official PyTorch implementation of "Discriminator-free Unsupervised Domain Adaptation for Multi-label Image Classification" in WACV 2024.
 
 ![alt text](arch_v4.png "Title")
+
+## Citation
+```bash
+@inproceedings{singh2023discriminatorfree,
+  title={Discriminator-free Unsupervised Domain Adaptation for Multi-label Image Classification},
+  author={Singh, Indel Pal and Ghorbel, Enjie and Kacem, Anis and Rathinam, Arunkumar and Aouada, Djamila},
+  booktitle={Proceedings of the IEEE/CVF Winter Conference on Applications of Computer Vision},
+  year={2024}
+}
+```
 
 ## Datasets
 1. [AID](https://github.com/Hua-YS/AID-Multilabel-Dataset)
@@ -68,3 +78,30 @@ Example: AID &rarr; UCM
 ```bash
 $ python main.py --phase test -s AID -t UCM -s-dir datasets/AID -t-dir datasets/UCM --model-path models/aid2ucm_best_63-2.pth
 ```
+
+## Training
+
+[Download](https://miil-public-eu.oss-eu-central-1.aliyuncs.com/model-zoo/ImageNet_21K_P/models/tresnet_m_miil_21k.pth) the imagenet pretrained weights for TResNetM.
+
+Syntax: Source &rarr; Target
+```bash
+$ python main.py -s <name_of_source_dataset> -t <name_of_target_dataset> -s-dir <path_to_source_dataset_dir> -t-dir <path_to_target_dataset_dir> --model-path <path_to_imagenet_pretrained_weights>
+```
+
+Example: AID &rarr; UCM
+```bash
+$ python main.py -s AID -t UCM -s-dir datasets/AID -t-dir datasets/UCM --model-path models/tresnet_m_miil_21k.pth
+```
+
+## Acknowledgement
+We create our code based on the following repositories:
+
+[Transfer Learning Library](https://github.com/thuml/Transfer-Learning-Library)
+
+[TResNet/ASL](https://github.com/Alibaba-MIIL/ASL)
+
+[ImageNet21k](https://github.com/Alibaba-MIIL/ImageNet21K)
+
+Thanks to the authors.
+
+
