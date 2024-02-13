@@ -224,7 +224,7 @@ class TResNet(Module):
         logits = self.head(self.embeddings)
         return logits, self.embeddings
 
- 
+
 def TResnetM(model_params):
     """Constructs a medium TResNet M model.
     """
