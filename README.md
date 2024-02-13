@@ -1,5 +1,5 @@
 # DDA-MLIC
-This repo is the official PyTorch implementation of "Discriminator-free Unsupervised Domain Adaptation for Multi-label Image Classification" in WACV 2024.
+This repo is the official PyTorch implementation of "[Discriminator-free Unsupervised Domain Adaptation for Multi-label Image Classification](https://openaccess.thecvf.com/content/WACV2024/papers/Singh_Discriminator-Free_Unsupervised_Domain_Adaptation_for_Multi-Label_Image_Classification_WACV_2024_paper.pdf)" in WACV 2024.
 
 ![alt text](arch_v4.png "Title")
 
